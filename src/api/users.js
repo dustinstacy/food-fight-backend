@@ -28,6 +28,22 @@ router.get("/:address", requiresAuth, async (req, res, next) => {
     }
 })
 
+router.post("/", async (req, res, next) => {
+    try {
+        req.body.address = req.body.address
+
+        const newUser = new User({
+            username: req.body.address,
+            address: req.body.address,
+        })
+
+        const savedUser = await newUser.save()
+        res.json(savedUser)
+    } catch (error) {
+        next(error)
+    }
+})
+
 // @route GET /api/users/:action
 // @desc Get user's data
 // @access Private
