@@ -10,6 +10,7 @@ export const checkForExistingUsername = async (req) => {
         }
         return null
     } catch (error) {
+        console.error("Error checking for existing username", error)
         return { error: "Error checking for existing username" }
     }
 }

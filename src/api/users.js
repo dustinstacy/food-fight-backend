@@ -2,7 +2,7 @@ import express from "express"
 import User from "../models/User.js"
 import requiresAuth from "../middleware/requiresAuth.js"
 import { hasUser } from "../utils/hasUser.js"
-import { checkForExistingUsername } from "../utils/checkForExisintgUsername.js"
+import { checkForExistingUsername } from "../utils/checkForExistingUsername.js"
 
 const router = express.Router()
 
@@ -71,16 +71,18 @@ router.put("/:action", requiresAuth, async (req, res, next) => {
         let updatedFields = {}
 
         switch (req.params.action) {
-            case "username":
+            case "username": {
                 const usernameError = await checkForExistingUsername(req)
                 if (usernameError) {
                     return res.status(400).json(usernameError)
                 }
                 updatedFields.username = req.body.username
                 break
-            case "image":
+            }
+            case "image": {
                 updatedFields.image = req.body.image
                 break
+            }
             default:
                 res.status(400).json({ error: "Invalid action" })
                 return
