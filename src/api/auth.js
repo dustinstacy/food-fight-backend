@@ -3,6 +3,7 @@ import { SiweMessage } from "siwe"
 import jwt from "jsonwebtoken"
 import User from "../models/User.js"
 import * as dotenv from "dotenv"
+import Nonce from "../models/Nonce.js"
 
 dotenv.config()
 const router = express.Router()
@@ -11,26 +12,27 @@ const JWT_SECRET = process.env.JWT_SECRET
 const APP_DOMAIN = process.env.APP_DOMAIN || "localhost"
 const APP_URI = process.env.APP_URI || "http://localhost:3000"
 
-//!! Temporary Nonce Storage (Replace with Redis/DB in production)
-const nonceStore = new Map()
-
 // @route POST /api/auth/challenge
 // @desc Generates a nonce and returns a SIWE message for signing
 // @access Public
 router.post("/challenge", async (req, res, next) => {
     try {
         const { address } = req.body
-
         if (!address) {
             return res.status(400).json({ error: "Address is required" })
         }
 
-        // Generate a secure nonce
+        // Clean up the previous nonce for the address and generate a new one
+        await Nonce.deleteOne({ address: address.toLowerCase() })
         const nonce = Math.random().toString(36).substring(2, 15) //!! consider crypto lib
 
-        // Store nonce temporarily associated with address
-        nonceStore.set(address, { nonce, timestamp: Date.now() })
-        //!! Clean up old nonces periodically in production
+        // Create a new nonce entry in the database
+        const newNonce = new Nonce({
+            address: address.toLowerCase(),
+            nonce: nonce,
+        })
+        await newNonce.save()
+        console.log(`[Auth Challenge] Nonce stored for ${address}: ${nonce}`)
 
         // Create SIWE message object
         const message = new SiweMessage({
@@ -41,14 +43,12 @@ router.post("/challenge", async (req, res, next) => {
             version: "1",
             chainId: 31337, //!! Make this dynamic if production is multi-chain
             nonce: nonce,
-            issuedAt: new Date().toISOString(), // Optional
-            expirationTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // Optional: 5 min expiry
+            issuedAt: new Date().toISOString(),
+            expirationTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
         })
 
-        // Prepare the message for signing
+        // Prepare the message for signing and send it to the client
         const preparedMessage = message.prepareMessage()
-
-        // Return the message to be signed
         res.json({ message: preparedMessage })
     } catch (error) {
         next(error)
@@ -66,29 +66,43 @@ router.post("/verify", async (req, res, next) => {
             return res.status(400).json({ error: "Message, signature, and address are required" })
         }
 
-        // Retrieve and validate stored nonce
-        const storedNonceData = nonceStore.get(address)
-        nonceStore.delete(address) // Nonce should be used only once
+        // Extract nonce from the message provided by the client
+        const siweMessage = new SiweMessage(message)
+        const messageNonce = siweMessage.nonce
 
-        //!! Add timestamp check in production
-        if (!storedNonceData || storedNonceData.nonce !== new SiweMessage(message).nonce) {
-            return res.status(401).json({ error: "Invalid or expired nonce." })
+        if (!messageNonce) {
+            return res.status(400).json({ error: "Nonce missing from message" })
+        }
+
+        // Find and delete the nonce from the database
+        const storedNonceDoc = await Nonce.findOneAndDelete({
+            address: address.toLowerCase(),
+            nonce: messageNonce,
+        })
+
+        console.log(
+            `[Auth Verify] Looked for nonce "${messageNonce}" for address ${address}. Found:`,
+            storedNonceDoc ? "Yes" : "No"
+        )
+
+        if (!storedNonceDoc) {
+            return res.status(401).json({ error: "Invalid, expired, or already used nonce." })
         }
 
         // Verify signature using siwe library
-        const siweMessage = new SiweMessage(message)
         const fields = await siweMessage.verify({ signature })
 
         // Check if signature verification was successful and address matches
-        if (fields.data.address !== address) {
+        if (fields.data.address.toLowerCase() !== address.toLowerCase()) {
             return res
                 .status(401)
                 .json({ error: "Signature verification failed: Address mismatch." })
         }
 
+        // Check if the user already exists in the database
         let user = await User.findOne({ address: address }).lean()
 
-        // If user doesn't exist, create them
+        // If the user doesn't exist, create a new user
         if (!user) {
             console.log(`User not found for ${address}, creating new user...`)
             const newUser = new User({
@@ -99,14 +113,13 @@ router.post("/verify", async (req, res, next) => {
         }
 
         if (!JWT_SECRET) {
-            throw new Error("JWT_SECRET is not configured on the server.") // Should have exited earlier, but safety check
+            throw new Error("JWT_SECRET is not configured on the server.") // Safety check
         }
 
         const tokenPayload = {
-            userId: user._id.toString(), // Use user's DB ID
+            userId: user._id.toString(), // User's DB ID
             address: user.address,
         }
-
         const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "1d" })
 
         res.json({ accessToken })
