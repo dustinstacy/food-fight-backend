@@ -9,6 +9,8 @@
     "resolveJsonModule": true, // Allows importing JSON files
     "moduleDetection": "force", // Treat files lacking imports/exports as modules
     "isolatedModules": true, // Ensures files can be transpiled independently
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
 
     /* Strictness */
     "strict": true, // Enable all strict type-checking options
