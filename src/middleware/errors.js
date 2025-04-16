@@ -4,27 +4,27 @@ const errorHandler = (error, req, res, next) => {
     const statusCode = error.statusCode || 500
 
     // Set default error message
-    let errorMessage = error.errorMessage || "An error occurred"
+    let errorMessage = error.message || "An error occurred"
 
     // Set specific error messages based on status code
     switch (statusCode) {
         case 400:
-            errorMessage = error.errorMessage || "Bad Request"
+            errorMessage = error.message || "Bad Request"
             break
         case 401:
-            errorMessage = error.errorMessage || "Unauthorized"
+            errorMessage = error.message || "Unauthorized"
             break
         case 403:
-            errorMessage = error.errorMessage || "Forbidden"
+            errorMessage = error.message || "Forbidden"
             break
         case 404:
-            errorMessage = error.errorMessage || "Not Found"
+            errorMessage = error.message || "Not Found"
             break
         case 500:
-            errorMessage = error.errorMessage || "Internal Server Error"
+            errorMessage = error.message || "Internal Server Error"
             break
         default:
-            errorMessage = error.errorMessage || "An error occurred"
+            errorMessage = error.message || "An error occurred"
     }
 
     // Log the error for debugging purposes
@@ -42,8 +42,6 @@ const errorHandler = (error, req, res, next) => {
         }
         res.status(statusCode).json(errorResponse)
     }
-
-    next()
 }
 
 export default errorHandler
