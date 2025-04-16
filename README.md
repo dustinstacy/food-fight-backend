@@ -37,7 +37,7 @@ npm install
 npm run dev
 ```
 
-(Optional) Setup your enivornment variables  by creating a .env file in the root directory
+(Optional) Setup your enivornment variables by creating a .env file in the root directory
 
 ```bash
 # food-fight-backend/.env
@@ -51,6 +51,7 @@ PORT=<number>
 CLIENT_PORT=<number>
 
 ```
+
 To utilize the frontend alongside this server, head over to the [frontend](https://github.com/dustinstacy/food-fight) repo and follow
 the Local Setup steps there.
 
@@ -67,4 +68,3 @@ Interested in contirbuting? Check out the current [issues](https://github.com/du
 ## License
 
 The MIT License (MIT)
-
