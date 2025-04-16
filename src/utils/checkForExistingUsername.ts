@@ -12,12 +12,15 @@ type CheckUsernameResult = { error: string } | null
  */
 export const checkForExistingUsername = async (username: string): Promise<CheckUsernameResult> => {
   try {
+    // Check if the username already exists (case-insensitive)
     const existingUsername = await User.findOne({
       username: new RegExp('^' + username + '$', 'i'),
     })
+    // If a user with the same username exists, return an error
     if (existingUsername) {
       return { error: 'Username already exists' }
     }
+    // If no user with the same username exists, return null
     return null
   } catch (error: unknown) {
     console.error('Error checking for existing username', error)
