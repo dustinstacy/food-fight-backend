@@ -1,6 +1,7 @@
 import express from "express"
 import { SiweMessage } from "siwe"
 import jwt from "jsonwebtoken"
+import crypto from "crypto"
 import User from "../models/User.js"
 import * as dotenv from "dotenv"
 import Nonce from "../models/Nonce.js"
@@ -22,9 +23,11 @@ router.post("/challenge", async (req, res, next) => {
             return res.status(400).json({ error: "Address is required" })
         }
 
-        // Clean up the previous nonce for the address and generate a new one
+        // Clean up the previous nonce for the address
         await Nonce.deleteOne({ address: address.toLowerCase() })
-        const nonce = Math.random().toString(36).substring(2, 15) //!! consider crypto lib
+
+        // Generate a new nonce
+        const nonce = crypto.randomBytes(16).toString("hex")
 
         // Create a new nonce entry in the database
         const newNonce = new Nonce({
