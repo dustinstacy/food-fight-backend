@@ -1,7 +1,6 @@
 import express from "express"
 import User from "../models/User.js"
 import requiresAuth from "../middleware/requiresAuth.js"
-import { hasUser } from "../utils/hasUser.js"
 import { checkForExistingUsername } from "../utils/checkForExistingUsername.js"
 
 const router = express.Router()
@@ -13,98 +12,88 @@ router.get("/test", (req, res) => {
     res.send("Profile route working")
 })
 
-// @route Get /api/users
+// @route GET /api/users
 // @desc Get user
 // @access Private
-router.get("/:address", requiresAuth, async (req, res, next) => {
+router.get("/current", requiresAuth, async (req, res, next) => {
     try {
-        if (!hasUser(req)) {
-            return res.status(400).json({ error: "No user found" })
-        }
-
         res.json(req.user)
     } catch (error) {
         next(error)
     }
 })
 
-router.post("/", async (req, res, next) => {
+// @route POST /api/users
+// @desc Create a new user
+// @access Private
+router.post("/", requiresAuth, async (req, res, next) => {
     try {
-        req.body.address = req.body.address
+        const userAddress = req.user?.address
+        if (!userAddress) {
+            return res.status(400).json({ error: "Authenticated user address not found" })
+        }
+
+        const existingUser = await User.findOne({ address: userAddress })
+        if (existingUser) {
+            return res.status(409).json({ error: "User already exists" })
+        }
 
         const newUser = new User({
-            username: req.body.address,
-            address: req.body.address,
+            username: userAddress, // Default username
+            address: userAddress,
         })
-
         const savedUser = await newUser.save()
-        res.json(savedUser)
+        res.status(201).json(savedUser) // Use 201 Created
     } catch (error) {
+        if (error.code === 11000) {
+            return res.status(409).json({ error: "User already exists." })
+        }
         next(error)
     }
 })
 
-// @route GET /api/users/:action
-// @desc Get user's data
+// @route PUT /api/users/:property
+// @desc Update user information
 // @access Private
-router.get("/:action", requiresAuth, async (req, res, next) => {
+router.put("/:property", requiresAuth, async (req, res, next) => {
     try {
-        if (!hasUser(req)) {
-            return res.status(400).json({ error: "No user found" })
-        }
+        const { property } = req.params
+        const userId = req.user._id
+        const value = req.body[property]
 
-        const user = req.user
-
-        switch (req.params.action) {
-            case "username":
-                res.json({
-                    username: user.username,
-                })
-                break
-            case "image":
-                res.json({
-                    image: user.image,
-                })
-                break
-            default:
-                res.status(400).json({ error: "Invalid action" })
-                return
-        }
-    } catch (error) {
-        next(error)
-    }
-})
-
-// @route PUT /api/users/:action
-// @desc Update user's profile
-// @access Private
-router.put("/:action", requiresAuth, async (req, res, next) => {
-    try {
-        if (!hasUser(req)) {
-            return res.status(400).json({ error: "No user found" })
+        if (value === undefined) {
+            return res
+                .status(400)
+                .json({ error: `Missing value for field '${property}' in request body.` })
         }
 
         let updatedFields = {}
 
-        switch (req.params.action) {
+        switch (property) {
             case "username": {
-                const usernameError = await checkForExistingUsername(req)
+                const usernameError = await checkForExistingUsername(value)
                 if (usernameError) {
                     return res.status(400).json(usernameError)
                 }
-                updatedFields.username = req.body.username
+                updatedFields.username = value
                 break
             }
             case "image": {
-                updatedFields.image = req.body.image
+                updatedFields.image = value
                 break
             }
             default:
-                res.status(400).json({ error: "Invalid action" })
-                return
+                return res.status(400).json({ error: "Invalid property" })
         }
 
-        const updatedUser = await User.findOneAndUpdate({ _id: req.user._id }, updatedFields, { new: true })
+        const updatedUser = await User.findOneAndUpdate({ _id: userId }, updatedFields, {
+            new: true,
+        }).lean()
+
+        if (!updatedUser) {
+            return res.status(404).json({ error: "User not found during update." }) // Should not happen if auth passed
+        }
+
         res.json(updatedUser)
     } catch (error) {
         next(error)
