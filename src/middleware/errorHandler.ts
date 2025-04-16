@@ -10,6 +10,10 @@ import { Request, Response, NextFunction, ErrorRequestHandler } from 'express'
  * Allows for an optional statusCode property to indicate HTTP status.
  */
 interface HttpError extends Error {
+  /**
+   * Optional HTTP status code for the error.
+   * Should be in the range of 400-599 for client and server errors respectively.
+   */
   statusCode?: number
 }
 
