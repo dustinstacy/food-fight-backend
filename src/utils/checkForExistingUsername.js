@@ -1,9 +1,9 @@
 import User from "../models/User.js"
 
-export const checkForExistingUsername = async (req) => {
+export const checkForExistingUsername = async (newUsername) => {
     try {
         const existingUsername = await User.findOne({
-            username: new RegExp("^" + req.body.username + "$", "i"),
+            username: new RegExp("^" + newUsername + "$", "i"), // Case-insensitive check
         })
         if (existingUsername) {
             return { error: "Username already exists" }
