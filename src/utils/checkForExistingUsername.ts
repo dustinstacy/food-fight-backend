@@ -1,4 +1,4 @@
-import User from '../models/User.js'
+import User from '../models/User.ts'
 
 /**
  * Type for the result of the checkForExistingUsername function.
