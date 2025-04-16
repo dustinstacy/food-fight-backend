@@ -12,24 +12,44 @@ const router = express.Router()
 const JWT_SECRET = process.env.JWT_SECRET
 const APP_DOMAIN = process.env.APP_DOMAIN || "localhost"
 const APP_URI = process.env.APP_URI || "http://localhost:3000"
+const NONCE_EXPIRY = process.env.NONCE_EXPIRY || 5 * 60 * 1000 // Default to 5 minutes
+const SUPPORTED_CHAIN_IDS_STR = process.env.SUPPORTED_CHAIN_IDS || "1,11155111,31337"
+const SUPPORTED_CHAIN_IDS = SUPPORTED_CHAIN_IDS_STR.split(",")
+    .map((id) => parseInt(id.trim(), 10))
+    .filter((id) => !isNaN(id))
+
+if (SUPPORTED_CHAIN_IDS.length === 0) {
+    console.error("FATAL ERROR: No valid SUPPORTED_CHAIN_IDS found in environment variables.")
+    process.exit(1)
+}
+console.log("Supported Chain IDs for Sign-In:", SUPPORTED_CHAIN_IDS)
 
 // @route POST /api/auth/challenge
 // @desc Generates a nonce and returns a SIWE message for signing
 // @access Public
 router.post("/challenge", async (req, res, next) => {
     try {
-        const { address } = req.body
-        if (!address) {
-            return res.status(400).json({ error: "Address is required" })
+        const { address, chainId } = req.body
+        if (!address || chainId == undefined) {
+            return res.status(400).json({ error: "Address and chainId are required" })
         }
 
-        // Clean up the previous nonce for the address
+        // Validate Chain ID
+        const numericChainId = parseInt(chainId, 10)
+        if (isNaN(numericChainId)) {
+            return res.status(400).json({ error: "Invalid chainId format" })
+        }
+        if (!SUPPORTED_CHAIN_IDS.includes(numericChainId)) {
+            return res.status(400).json({
+                error: `Unsupported chainId: ${numericChainId}. Supported: ${SUPPORTED_CHAIN_IDS.join(
+                    ", "
+                )}`,
+            })
+        }
+
+        // Clean up previous nonce if any, create a new one, and store it in the database
         await Nonce.deleteOne({ address: address.toLowerCase() })
-
-        // Generate a new nonce
         const nonce = crypto.randomBytes(16).toString("hex")
-
-        // Create a new nonce entry in the database
         const newNonce = new Nonce({
             address: address.toLowerCase(),
             nonce: nonce,
@@ -44,10 +64,10 @@ router.post("/challenge", async (req, res, next) => {
             statement: "Sign in with Ethereum to Food Fight.",
             uri: APP_URI,
             version: "1",
-            chainId: 31337, //!! Make this dynamic if production is multi-chain
+            chainId: numericChainId,
             nonce: nonce,
             issuedAt: new Date().toISOString(),
-            expirationTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+            expirationTime: new Date(Date.now() + NONCE_EXPIRY).toISOString(),
         })
 
         // Prepare the message for signing and send it to the client
@@ -72,17 +92,32 @@ router.post("/verify", async (req, res, next) => {
         // Extract nonce from the message provided by the client
         const siweMessage = new SiweMessage(message)
         const messageNonce = siweMessage.nonce
+        const messageChainId = siweMessage.chainId
 
         if (!messageNonce) {
             return res.status(400).json({ error: "Nonce missing from message" })
         }
+        if (!messageChainId) {
+            return res.status(400).json({ error: "Chain ID missing from message" })
+        }
+
+        // Validate Chain ID
+        if (!SUPPORTED_CHAIN_IDS.includes(messageChainId)) {
+            return res.status(400).json({
+                error: `Unsupported chainId in message: ${messageChainId}. Supported: ${SUPPORTED_CHAIN_IDS.join(
+                    ", "
+                )}`,
+            })
+        }
+
+        const fiveMinutesAgo = new Date(Date.now() - NONCE_EXPIRY)
 
         // Find and delete the nonce from the database
         const storedNonceDoc = await Nonce.findOneAndDelete({
             address: address.toLowerCase(),
             nonce: messageNonce,
+            createdAt: { $gte: fiveMinutesAgo },
         })
-
         console.log(
             `[Auth Verify] Looked for nonce "${messageNonce}" for address ${address}. Found:`,
             storedNonceDoc ? "Yes" : "No"
