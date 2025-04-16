@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv'
 import authRoutes from './api/auth.js'
 import userRoutes from './api/users.js'
 import errorHandler from './middleware/errors.js'
-import { CLIENT_PORT, MONGO_DEV_URI, PORT } from './utils/helperConfig.js'
+import { CORS_ORIGIN, MONGO_DEV_URI, PORT } from './utils/helperConfig.js'
 
 //////////////////////////////////////////////
 /// Setup                                  ///
@@ -20,12 +20,10 @@ if (!JWT_SECRET) {
   console.error('Server cannot start securely without a JWT secret for token validation.')
   process.exit(1)
 }
-const localClientPort = process.env.CLIENT_PORT || CLIENT_PORT
+
 const localServerPort = process.env.PORT || PORT
 const MONGO_URI = process.env.MONGO_URI || MONGO_DEV_URI
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',')
-  : [`http://localhost:${localClientPort}`]
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : CORS_ORIGIN
 
 ////////////////////////////////////////////////
 /// Configuration                            ///
