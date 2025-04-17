@@ -1,6 +1,4 @@
-// src/middleware/errors.ts
 import type { Request, Response, NextFunction, ErrorRequestHandler } from 'express'
-import type { HttpError } from '../types/middleware.types.ts'
 
 /**
  * Express error handling middleware (must be registered LAST with `app.use`).
@@ -10,25 +8,28 @@ import type { HttpError } from '../types/middleware.types.ts'
  * - Determines error message, preferring `error.message` if available, otherwise uses a default fallback.
  * - Logs the full error object to `console.error` (consider a structured logger in production).
  */
-const errorHandler: ErrorRequestHandler = (
-  error: HttpError | Error | any,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-) => {
-  // Determine the status code from the error object or default to 500
-  const statusCode: number =
-    typeof error.statusCode === 'number' && error.statusCode >= 400 && error.statusCode < 600 ? error.statusCode : 500
-
-  // Determine the error message from the error object or default to a generic message
+const errorHandler: ErrorRequestHandler = (error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  let statusCode: number = 500
   let errorMessage: string = 'An unexpected error occurred'
-  if (error instanceof Error && error.message) {
-    errorMessage = error.message
-  } else if (typeof error === 'string') {
-    errorMessage = error
+  let stack: string | undefined = undefined
+
+  if (error instanceof Error) {
+    errorMessage = error.message || errorMessage
+    stack = error.stack
+
+    // Check if the error has a statusCode property
+    if (
+      error &&
+      typeof error === 'object' &&
+      'statusCode' in error &&
+      typeof error.statusCode === 'number' &&
+      error.statusCode >= 400 &&
+      error.statusCode < 600
+    ) {
+      statusCode = error.statusCode
+    }
   }
 
-  // Log the error details to the console
   console.error(`[ErrorHandler] Status: ${statusCode}, Path: ${_req.path}, Error:`, error)
 
   // Prepare the response based on the environment
@@ -39,7 +40,7 @@ const errorHandler: ErrorRequestHandler = (
     // In development, return the full error object for debugging
     const errorResponse: { error: string; stack?: string } = {
       error: errorMessage,
-      stack: error instanceof Error ? error.stack : undefined,
+      stack: stack,
     }
     res.status(statusCode).json(errorResponse)
   }

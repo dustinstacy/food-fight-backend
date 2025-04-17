@@ -1,4 +1,4 @@
-import type { IUser } from '../models/User.ts'
+import type { IUser } from '../models/User.js'
 
 /**
  * Declare global augmentation for Express Request object

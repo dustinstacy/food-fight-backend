@@ -1,4 +1,4 @@
-import User from '../models/User.ts'
+import User from '../models/User.js'
 
 /**
  * Type for the result of the checkForExistingUsername function.
@@ -14,6 +14,7 @@ export const checkForExistingUsername = async (username: string): Promise<CheckU
   try {
     // Check if the username already exists (case-insensitive)
     const existingUsername = await User.findOne({
+      // eslint-disable-next-line security/detect-non-literal-regexp
       username: new RegExp('^' + username + '$', 'i'),
     })
     // If a user with the same username exists, return an error

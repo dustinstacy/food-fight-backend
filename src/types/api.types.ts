@@ -1,4 +1,4 @@
-import { IUser } from '../types/models.types.ts'
+import { IUser } from '../types/models.types.js'
 
 /**
  * Interface for the request body of the challenge endpoint.

@@ -1,19 +1,20 @@
-import express from 'express'
-import type { Router, Request, Response, NextFunction } from 'express'
-import { SiweMessage } from 'siwe'
-import jwt from 'jsonwebtoken'
-import * as dotenv from 'dotenv'
 import crypto from 'crypto'
 
-import User from '../models/User.ts'
-import type { IUser } from '../types/models.types.ts'
-import Nonce from '../models/Nonce.ts'
-import type { INonce } from '../types/models.types.ts'
-import type { AuthTokenPayload } from '../types/middleware.types.ts'
-import type { ChallengeRequestBody, VerifyRequestBody } from '../types/api.types.ts'
+import * as dotenv from 'dotenv'
+import { Router } from 'express'
+import { sign } from 'jsonwebtoken'
+import { SiweMessage } from 'siwe'
+
+import Nonce from '../models/Nonce.js'
+import User from '../models/User.js'
+
+import type { ChallengeRequestBody, VerifyRequestBody } from '../types/api.types.js'
+import type { AuthTokenPayload } from '../types/middleware.types.js'
+import type { INonce, IUser } from '../types/models.types.js'
+import type { Request, Response, NextFunction } from 'express'
 
 dotenv.config()
-const router: Router = express.Router()
+const router: Router = Router()
 
 const JWT_SECRET = process.env.JWT_SECRET as string
 const APP_DOMAIN = process.env.APP_DOMAIN || 'localhost'
@@ -25,6 +26,15 @@ const SUPPORTED_CHAIN_IDS = SUPPORTED_CHAIN_IDS_STR.split(',')
   .filter((id) => !isNaN(id))
 
 console.log('Supported Chain IDs for Sign-In:', SUPPORTED_CHAIN_IDS)
+
+/**
+ * PUBLIC
+ * GET /api/auth/test
+ * Simple route to test if the auth API is reachable.
+ */
+router.get('/test', (_req: Request, res: Response) => {
+  res.send('User Profile route working')
+})
 
 /**
  * PUBLIC
@@ -74,6 +84,8 @@ router.post('/challenge', async (req: Request, res: Response, next: NextFunction
 
     // Prepare the message for signing
     const preparedMessage: string = message.prepareMessage()
+
+    // Return the message to the client
     res.json({ message: preparedMessage })
   } catch (error) {
     next(error)
@@ -150,7 +162,9 @@ router.post('/verify', async (req: Request, res: Response, next: NextFunction): 
 
     // Create the JWT token
     if (!JWT_SECRET) throw new Error('JWT_SECRET missing')
-    const accessToken: string = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '1d' })
+    const accessToken: string = sign(tokenPayload, JWT_SECRET, { expiresIn: '1d' })
+
+    // Return the JWT token to the client
     res.json({ accessToken })
   } catch (error: unknown) {
     if (error instanceof Error && error.message.includes('Signature')) {

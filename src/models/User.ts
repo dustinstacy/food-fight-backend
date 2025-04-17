@@ -1,5 +1,6 @@
 import { Schema, model } from 'mongoose'
-import { IUser } from '../types/models.types.ts'
+
+import { IUser } from '../types/models.types.js'
 
 ///////////////////////////////////////////////////////////////////
 /// Schema                                             ///

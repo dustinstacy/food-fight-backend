@@ -1,5 +1,6 @@
 import { Schema, model } from 'mongoose'
-import { INonce } from '../types/models.types.ts'
+
+import { INonce } from '../types/models.types.js'
 
 ///////////////////////////////////////////////////////////////////
 /// Schema                                                      ///

@@ -18,4 +18,4 @@ export const CLIENT_PORT: number = 3000
 /**
  * Set default configuration value for the CORS origin.
  */
-export const CORS_ORIGIN: string[] = [`http://localhost:${CLIENT_PORT}`]
+export const CORS_DEV_ORIGIN: string[] = [`http://localhost:${CLIENT_PORT}`]

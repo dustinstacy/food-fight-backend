@@ -1,14 +1,14 @@
-import type { Request, Response, NextFunction } from 'express'
-import jwt from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
+import { verify, TokenExpiredError, JsonWebTokenError } from 'jsonwebtoken'
 
-import User from '../models/User.ts'
-import type { AuthTokenPayload } from '../types/middleware.types.ts'
-import type { IUser } from '../types/models.types.ts'
+import User from '../models/User.js'
+
+import type { AuthTokenPayload } from '../types/middleware.types.js'
+import type { IUser } from '../types/models.types.js'
+import type { Request, Response, NextFunction } from 'express'
 
 dotenv.config()
 
-const { verify, TokenExpiredError, JsonWebTokenError } = jwt
 const JWT_SECRET = process.env.JWT_SECRET as string
 
 /**
@@ -19,9 +19,6 @@ const JWT_SECRET = process.env.JWT_SECRET as string
  * - Handles missing tokens, invalid formats, expired tokens, invalid signatures,
  * and cases where the user ID in the token doesn't match a database user.
  * - Attaches the full Mongoose user document (as a lean object) to `req.user`.
- *
- * @see {@link AuthTokenPayload} - Expected structure of the JWT payload.
- * @see {@link IUser} - Interface for the attached `req.user` object.
  */
 const requiresAuth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization
