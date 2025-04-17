@@ -1,26 +1,5 @@
-import { Schema, model, Document } from 'mongoose'
-
-///////////////////////////////////////////////////////////////////
-/// Interface                                                   ///
-///////////////////////////////////////////////////////////////////
-
-/**
- * Represents the structure of a User document in MongoDB.
- * This interface extends Mongoose's Document interface to include
- * Mongoose-specific properties and methods.
- */
-export interface IUser extends Document {
-  /** Unique blockchain wallet address. Primary identifier. */
-  address: string
-  /** User's chosen display name. */
-  username: string
-  /** URL for the user's profile avatar image. Includes a default value. */
-  image: string
-  /** Timestamp indicating when the document was created. */
-  createdAt: Date
-  /** Timestamp indicating when the document was last updated. */
-  updatedAt: Date
-}
+import { Schema, model } from 'mongoose'
+import { IUser } from '../types/models.types.ts'
 
 ///////////////////////////////////////////////////////////////////
 /// Schema                                             ///
