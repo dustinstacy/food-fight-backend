@@ -1,25 +1,6 @@
 // src/middleware/errors.ts
-import { Request, Response, NextFunction, ErrorRequestHandler } from 'express'
-
-//////////////////////////////////////////////////////////////
-/// Interface                                              ///
-//////////////////////////////////////////////////////////////
-
-/**
- * Custom error interface extending the standard Error object.
- * Allows for an optional statusCode property to indicate HTTP status.
- */
-interface HttpError extends Error {
-  /**
-   * Optional HTTP status code for the error.
-   * Should be in the range of 400-599 for client and server errors respectively.
-   */
-  statusCode?: number
-}
-
-//////////////////////////////////////////////////////////////
-/// Error Handling Middleware                              ///
-//////////////////////////////////////////////////////////////
+import type { Request, Response, NextFunction, ErrorRequestHandler } from 'express'
+import type { HttpError } from '../types/middleware.types.ts'
 
 /**
  * Express error handling middleware (must be registered LAST with `app.use`).
@@ -28,11 +9,6 @@ interface HttpError extends Error {
  * - Determines HTTP status code, preferring `error.statusCode` if present and valid (400-599), otherwise defaults to 500.
  * - Determines error message, preferring `error.message` if available, otherwise uses a default fallback.
  * - Logs the full error object to `console.error` (consider a structured logger in production).
- *
- * @param error - The error object. Can be a standard Error, HttpError, or other value.
- * @param req - The Express request object (unused).
- * @param res - The Express response object (used to send the error response).
- * @param _next - The Express next function (required in signature for error handlers, but unused here).
  */
 const errorHandler: ErrorRequestHandler = (
   error: HttpError | Error | any,
