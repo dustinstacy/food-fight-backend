@@ -1,8 +1,8 @@
 import crypto from 'crypto'
 
 import * as dotenv from 'dotenv'
-import { Router } from 'express'
-import { sign } from 'jsonwebtoken'
+import express, { Router } from 'express'
+import jwt from 'jsonwebtoken'
 import { SiweMessage } from 'siwe'
 
 import Nonce from '../models/Nonce.js'
@@ -14,7 +14,7 @@ import type { INonce, IUser } from '../types/models.types.js'
 import type { Request, Response, NextFunction } from 'express'
 
 dotenv.config()
-const router: Router = Router()
+const router: Router = express.Router()
 
 const JWT_SECRET = process.env.JWT_SECRET as string
 const APP_DOMAIN = process.env.APP_DOMAIN || 'localhost'
@@ -162,7 +162,7 @@ router.post('/verify', async (req: Request, res: Response, next: NextFunction): 
 
     // Create the JWT token
     if (!JWT_SECRET) throw new Error('JWT_SECRET missing')
-    const accessToken: string = sign(tokenPayload, JWT_SECRET, { expiresIn: '1d' })
+    const accessToken: string = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '1d' })
 
     // Return the JWT token to the client
     res.json({ accessToken })

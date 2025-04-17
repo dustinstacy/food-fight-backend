@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv'
-import { verify, TokenExpiredError, JsonWebTokenError } from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 
 import User from '../models/User.js'
 
@@ -9,6 +9,7 @@ import type { Request, Response, NextFunction } from 'express'
 
 dotenv.config()
 
+const { JsonWebTokenError, TokenExpiredError } = jwt
 const JWT_SECRET = process.env.JWT_SECRET as string
 
 /**
@@ -38,7 +39,7 @@ const requiresAuth = async (req: Request, res: Response, next: NextFunction): Pr
 
   try {
     // Verify the token and type the decoded payload
-    const decoded = verify(token, JWT_SECRET) as AuthTokenPayload
+    const decoded = jwt.verify(token, JWT_SECRET) as AuthTokenPayload
 
     // Validate the structure of the decoded payload
     if (typeof decoded.userId !== 'string') {

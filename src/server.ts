@@ -1,6 +1,6 @@
 import cors, { CorsOptions } from 'cors'
 import * as dotenv from 'dotenv'
-import express, { Express, json, Request, Response } from 'express'
+import express, { Express, Request, Response } from 'express'
 import mongoose from 'mongoose'
 
 import authRoutes from './api/auth.js'
@@ -39,7 +39,7 @@ const app: Express = express()
 ////////////////////////////////////////////////
 /// Middleware Configuration                 ///
 ////////////////////////////////////////////////
-app.use(json())
+app.use(express.json())
 
 const corsOptions: CorsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {

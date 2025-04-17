@@ -72,6 +72,7 @@ export default [
           cts: 'never',
         },
       ],
+      'import/no-named-as-default-member': 'off',
     },
     settings: {
       // Settings specifically for eslint-plugin-import

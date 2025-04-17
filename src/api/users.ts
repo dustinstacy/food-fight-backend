@@ -1,5 +1,5 @@
 // src/api/users.ts
-import { Router, Request, Response, NextFunction, RequestHandler } from 'express'
+import express, { Router, Request, Response, NextFunction, RequestHandler } from 'express'
 
 import requiresAuth from '../middleware/requiresAuth.js'
 import User from '../models/User.js'
@@ -7,7 +7,7 @@ import { checkForExistingUsername } from '../utils/checkForExistingUsername.js'
 
 import type { IUser } from '../types/models.types.js'
 
-const router: Router = Router()
+const router: Router = express.Router()
 
 /**
  * PUBLIC
