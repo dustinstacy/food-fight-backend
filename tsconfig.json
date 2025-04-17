@@ -1,39 +1,27 @@
-// tsconfig.json
 {
   "compilerOptions": {
-    /* Base Options: */
-    "esModuleInterop": true, // Enables compatibility with CommonJS modules
-    "skipLibCheck": true, // Skip type checking of declaration files (speeds up compilation)
-    "target": "ES2022", // Target modern Node.js versions (adjust if needed)
-    "allowJs": true, // Allow JavaScript files to be compiled (useful during transition)
-    "resolveJsonModule": true, // Allows importing JSON files
-    "moduleDetection": "force", // Treat files lacking imports/exports as modules
-    "isolatedModules": true, // Ensures files can be transpiled independently
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-
-    /* Strictness */
-    "strict": true, // Enable all strict type-checking options
-    "noUncheckedIndexedAccess": true, // Safer object property access
-    "noImplicitAny": true, // Require explicit 'any' type
-
-    /* Module Resolution */
-    "module": "NodeNext", // Use Node's modern ESM-aware module system
-    "moduleResolution": "NodeNext", // Algorithm for resolving modules
-
-    /* Output */
-    "outDir": "./dist", // Where to output compiled JavaScript
-    "rootDir": "./src", // Specify root directory of source files
-
-    /* Source Maps */
-    "sourceMap": true, // Generate source maps for debugging
-    "inlineSources": true, // Include source code in source maps
-
-    /* Linting */
-    "noUnusedLocals": true, // Warn on unused local variables
-    "noUnusedParameters": true, // Warn on unused parameters
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitAny": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "sourceMap": true,
+    "inlineSources": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/**/*"], // Which files to include in compilation
-  "exclude": ["node_modules", "dist", "**/*.test.ts"] // Exclude node_modules, output dir, and test files
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.*"]
 }
