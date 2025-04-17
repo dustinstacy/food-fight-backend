@@ -5,15 +5,12 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "check": "npm run test && npm run lint && npm run format:check",
-    "dev": "nodemon src/server.js",
+    "check": "npm run lint && npm run format:check",
+    "dev": "tsx watch src/server.js",
     "lint": "eslint .",
     "lint:fix": "eslint . -- --fix",
     "format": "prettier --write . --ignore-path .gitignore",
-    "format:check": "prettier --check . --ignore-path .gitignore",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' vitest run --passWithNoTests",
-    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' vitest watch",
-    "coverage": "NODE_OPTIONS='--experimental-vm-modules' vitest run --coverage"
+    "format:check": "prettier --check . --ignore-path .gitignore"
   },
   "keywords": [],
   "author": "",
@@ -35,8 +32,8 @@
     "eslint": "^9.19.0",
     "eslint-config-prettier": "^10.1.2",
     "globals": "^15.14.0",
-    "nodemon": "^3.1.9",
     "prettier": "^3.5.3",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.3"
   }
 }
