@@ -141,11 +141,16 @@ router.post('/verify', async (req: Request, res: Response, next: NextFunction): 
     }
 
     // Check if the address matches the one in the message, if not create a new user
+    let isNewUser = false
     let user: IUser | null = await User.findOne({ address: address.toLowerCase() }).lean<IUser>()
     if (!user) {
       const newUser = new User({ username: address, address: address.toLowerCase() })
       const savedUser = await newUser.save()
       user = savedUser.toObject() as IUser
+      isNewUser = true
+      console.log(`[Auth Verify] New user created for address: ${address}`)
+    } else {
+      console.log(`[Auth Verify] Existing user found for address: ${address}`)
     }
 
     // Check if the user object is valid and contains the _id field
@@ -165,7 +170,7 @@ router.post('/verify', async (req: Request, res: Response, next: NextFunction): 
     const accessToken: string = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '1d' })
 
     // Return the JWT token to the client
-    res.json({ accessToken })
+    res.json({ accessToken, isNewUser })
   } catch (error: unknown) {
     if (error instanceof Error && error.message.includes('Signature')) {
       res.status(401).json({ error: 'Invalid signature' })
