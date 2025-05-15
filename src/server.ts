@@ -7,6 +7,7 @@ import helmet from 'helmet'
 import mongoose from 'mongoose'
 
 import authRoutes from './api/auth.js'
+import nftRoutes from './api/nft.js'
 import userRoutes from './api/users.js'
 import errorHandler from './middleware/errorHandler.js'
 import { PORT, MONGO_DEV_URI, CORS_DEV_ORIGIN } from './utils/defaultsConfig.js'
@@ -15,7 +16,7 @@ import { PORT, MONGO_DEV_URI, CORS_DEV_ORIGIN } from './utils/defaultsConfig.js'
 /// Environment & Initial Setup            ///
 //////////////////////////////////////////////
 
-dotenv.config() // Load .env variables
+dotenv.config()
 const JWT_SECRET = process.env.JWT_SECRET
 const MONGO_URI = process.env.MONGO_URI || MONGO_DEV_URI
 const SERVER_PORT = process.env.PORT || String(PORT)
@@ -39,6 +40,13 @@ console.log('Allowed CORS Origins:', allowedOrigins)
 
 const app: Express = express()
 
+////////////////////////////////////////////////
+/// Middleware Configuration                 ///
+////////////////////////////////////////////////
+app.use(helmet())
+app.use(mongoSanitize())
+app.use(express.json({ limit: '50mb' }))
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
@@ -48,20 +56,13 @@ const limiter = rateLimit({
 })
 app.use(limiter)
 
-////////////////////////////////////////////////
-/// Middleware Configuration                 ///
-////////////////////////////////////////////////
-app.use(express.json())
-app.use(helmet())
-app.use(mongoSanitize())
-
 const corsOptions: CorsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
       console.warn(`CORS blocked request from origin: ${origin}`)
-      callback(new Error(`Origin not allowed by CORS: ${origin}`))
+      callback(null, false)
     }
   },
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -75,6 +76,7 @@ app.use(cors(corsOptions))
 //////////////////////////////////////////////////
 
 app.use('/api/auth', authRoutes)
+app.use('/api/nft', nftRoutes)
 app.use('/api/users', userRoutes)
 
 app.get('/', (_req: Request, res: Response) => {
