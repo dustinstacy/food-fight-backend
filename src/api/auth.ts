@@ -51,6 +51,8 @@ router.post('/challenge', async (req: Request, res: Response, next: NextFunction
       return
     }
 
+    console.log('[Auth Challenge] chainId:', chainId)
+
     // Parse chainId and validate
     const numericChainId = parseInt(String(chainId), 10)
     if (isNaN(numericChainId)) {
@@ -61,6 +63,8 @@ router.post('/challenge', async (req: Request, res: Response, next: NextFunction
       res.status(400).json({ error: 'Unsupported chainId' })
       return
     }
+
+    console.log(numericChainId)
 
     // Remove any existing nonce for the address, then create a new one, and save it
     await Nonce.deleteOne({ address: address.toLowerCase() })
